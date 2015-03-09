@@ -1,0 +1,153 @@
+#! /bin/sh
+##
+## runTimeMachineBackup.sh
+##
+## exits with code:
+##    0 - if successful
+##    1 - if mount script exited with non-zero code
+##    2 - if failed to start TM-backup
+##    5 - if dismount script exited with non-zero code
+##    7 - if there was a problem detecting wether TM is running or not
+##
+## Script by SwissalpS@LukeZimmermann.com
+## Rev 20150216_123530
+## "tested" on OS X 10.9.1
+
+##
+## some variables to setup
+##
+
+## time in seconds to wait before checking if Time Machine is running
+## choose big enough, as TM will start, pause and then actually start
+## as detectable by the script: isTimeMachineRunning.sh
+iSecondsForBackup=###SssSiSecondsForBackup###;
+
+## time in seconds to wait before checking again if Time Machine is running
+iSecondsToWaitInLoop=###SssSiSecondsToWaitInLoop###;
+
+##
+## end of variable setup
+##
+
+## initialize exit status
+iExitStatus=0;
+
+## define an exit function
+## set iExitStatus before calling
+bailSssS(){
+
+  ##
+  ## output current date stamp for reference
+  date;
+
+  ## exit with status set earlier
+  exit $iExitStatus;
+
+}
+## bailSssS()
+
+## define a function that checks progress
+keepWaitingForTM() {
+
+  ./isTimeMachineRunning.sh;
+
+  ## catch the exit code
+  iRes=$?;
+
+  if [ "0" = "$iRes" ]; then
+
+    echo "Time Machine is working.";
+
+    return 0;
+
+  elif [ "1" = "$iRes" ]; then
+
+    echo "Time Machine is not working.";
+
+    return 1;
+
+  else
+
+    echo "There was an error detecting whether Time Machine is working or not.";
+
+    iExitStatus=7;
+
+    return 1;
+
+  fi;
+
+}
+## keepWaitingForTM()
+
+##
+## output current date stamp for reference
+date;
+
+##
+## mount TM-target
+if ./mountNext.phps; then
+
+  echo "mounted OK";
+
+else
+
+  echo "failed to mount";
+
+  ## bail with exit code 1
+  iExitStatus=1;
+  bailSssS;
+
+fi;
+
+##
+## start backup
+if ./startTMbackup.sh; then
+
+  echo "started backup";
+
+else
+
+  echo "failed to start backup";
+
+  ## bail with exit code 2
+  iExitStatus=2;
+  bailSssS;
+
+fi;
+
+##
+## give TM some time to backup
+sleep $iSecondsForBackup;
+
+##
+## wait for Time Machine to do it's thing
+while keepWaitingForTM; do
+
+  ## wait a while
+  sleep $iSecondsToWaitInLoop;
+
+done;
+
+##
+## dismount TM-target
+#if ./ejectCurrent.phps; then
+if ./unmountCurrent.phps; then
+
+  echo "dismounted OK";
+
+else
+
+  echo "dismount failed";
+
+  ## bail with exit code 5
+  iExitStatus=5;
+  bailSssS;
+
+fi;
+
+##
+## bail with whatever exit code was set
+bailSssS;
+
+#######################
+

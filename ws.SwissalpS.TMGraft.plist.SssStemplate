@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>###SssSsLaunchdName###</string>
+	<key>Program</key>
+	<string>###SssSinstallPath###/bin/runTimeMachineBackup.sh</string>
+	<key>WorkingDirectory</key>
+	<string>###SssSinstallPath###/bin</string>
+	<key>RunAtLoad</key>
+	<false/>
+	<key>ExitTimeOut</key>
+	<integer>0</integer>
+	<key>Disabled</key>
+	<false/>
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Minute</key>
+		<integer>###SssSlaunchMinute###</integer>
+		<key>Hour</key>
+		<integer>###SssSlaunchHour###</integer>
+	</dict>
+	<key>UserName</key>
+	<string>root</string>
+	<key>StandardOutPath</key>
+	<string>###SssSlogPath###/out.log</string>
+	<key>StandardErrorPath</key>
+	<string>###SssSlogPath###/error.log</string>
+</dict>
+</plist>

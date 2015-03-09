@@ -1,0 +1,52 @@
+#! /bin/sh
+##
+## uninstall.sh
+##
+## run as sudoer (admin)
+##
+## This script removes SwissalpS Time Machine Graft
+##
+## exits with code:
+##    0 - if successful
+##
+## Script by SwissalpS@LukeZimmermann.com
+## Rev 20150216_124630
+## "tested" on OS X 10.9.1
+
+## where to install to
+## if you change this, you will also have to change paths in plist
+sPathInstall="###SssSinstallPath###";
+sPathLogs="###SssSlogPath###";
+
+## where to install plist to
+sPathLibrary="/System/Library/LaunchDaemons";
+#sPathLibrary="/System/Library/LaunchAgents";
+
+## name of launchd.plist
+sPlistName="###SssSsLaunchdName###.plist";
+
+## name of newsyslog.conf (log rotation)
+sConfName="###SssSsLaunchdName###.conf";
+
+##########
+
+## stop in launchd, jic, unload should suffice
+sudo launchctl stop ###SssSsLaunchdName###
+
+## unload from launchctl
+sudo launchctl unload "$sPathLibrary/$sPlistName";
+
+## remove plist from LaunchDaemons or LaunchAgents
+sudo rm "$sPathLibrary/$sPlistName";
+
+## remove configuration file to rotate log files
+sudo rm "/etc/newsyslog.d/$sConfName";
+
+## remove target
+sudo rm -r "$sPathInstall";
+
+## remove log dir
+sudo rm -r "$sPathLogs";
+
+exit 0;
+

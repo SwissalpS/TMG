@@ -1,0 +1,105 @@
+#! /bin/sh
+##
+## install.sh
+##
+## run as sudoer (admin)
+## change to directory containing this and the other files
+## This script fixes permissions and
+## then moves the plist to /System/Library/LaunchDaemons
+## and loads it with launchctl
+##
+## exits with code:
+##    0 - if successful
+##
+## Script by SwissalpS@LukeZimmermann.com
+## Rev 20150216_124630
+## "tested" on OS X 10.9.1
+
+## where to install to
+## if you change this, you will also have to change paths in plist
+sPathInstall="###SssSinstallPath###";
+sPathLogs="###SssSlogPath###";
+
+## where to install plist to
+sPathLibrary="/System/Library/LaunchDaemons";
+#sPathLibrary="/System/Library/LaunchAgents";
+
+## name of launchd.plist
+sPlistName="###SssSsLaunchdName###.plist";
+
+## name of newsyslog.conf (log rotation)
+sConfName="###SssSsLaunchdName###.conf";
+
+## create target
+sudo mkdir -p "$sPathInstall/bin";
+
+## create includes dir
+sudo mkdir -p "$sPathInstall/inc";
+
+## create cache dir
+sudo mkdir -p "$sPathInstall/cache";
+
+## create log dir
+sudo mkdir -p "$sPathLogs";
+
+## make read and writeable for all
+#sudo chmod a+rw "$sPathLogs";
+
+## copy files to target (since we are doing so as root,
+## the files will have the correct ownership)
+if [ -d "../bin/cacheDiskUUIDs.app" ]; then
+  sudo cp -r ../bin/cacheDiskUUIDs.app "$sPathInstall/bin/";
+fi;
+sudo cp ../bin/cacheDiskUUIDs.applescript "$sPathInstall/bin/";
+sudo cp ../bin/cacheDiskUUIDs.phps "$sPathInstall/bin/";
+sudo cp ../bin/ejectCurrent.phps "$sPathInstall/bin/";
+sudo cp ../bin/isTimeMachineRunning.sh "$sPathInstall/bin/";
+sudo cp ../bin/mountNext.phps "$sPathInstall/bin/";
+sudo cp ../bin/runTimeMachineBackup.sh "$sPathInstall/bin/";
+sudo cp ../bin/startTMbackup.sh "$sPathInstall/bin/";
+if [ -d "../bin/uninstall.app" ]; then
+  sudo cp -r ../bin/uninstall.app "$sPathInstall/bin/";
+fi;
+sudo cp ../bin/uninstall.applescript "$sPathInstall/bin/";
+sudo cp ../bin/uninstall.sh "$sPathInstall/bin/";
+
+## include files (php classes)
+sudo cp ../inc/SssS_TMGDiskDetector.php.inc "$sPathInstall/inc/";
+#sudo cp ../inc/SssS_TMGPrepare.php.inc "$sPathInstall/inc/";
+sudo cp ../inc/SssS_TMGShellScriptRunnerSimplified.php.inc "$sPathInstall/inc/";
+
+## dependencies of SssS_TMGDiskDetector when called by cacheDiskUUIDs.phps
+sudo cp ../inc/SssS_FileGetPutContents.inc "$sPathInstall/inc/";
+sudo cp ../inc/SssS_Plist.inc "$sPathInstall/inc/";
+sudo cp ../inc/SssS_xhtml.inc "$sPathInstall/inc/";
+
+## bureaucracies...
+sudo cp ../README.md "$sPathInstall/";
+sudo cp ../LICENCE "$sPathInstall/";
+
+## make executable anything in bin
+sudo chmod a+x $sPathInstall/bin/*;
+
+## cache UUIDs
+echo "Caching UUIDs..";
+sudo "$sPathInstall/bin/cacheDiskUUIDs.phps";
+
+## unload from launchctl, jic
+if [ -f "$sPathLibrary/$sPlistName" ]; then
+  sudo launchctl unload "$sPathLibrary/$sPlistName";
+fi;
+
+## copy plist to LaunchDaemons or LaunchAgents
+sudo cp "../$sPlistName" "$sPathLibrary/";
+
+## load with launchctl
+sudo launchctl load "$sPathLibrary/$sPlistName";
+
+## add configuration file to rotate log files
+sudo cp "../$sConfName" /etc/newsyslog.d/;
+
+## clean-up, remove files made from templates
+sudo rm -f "../$sConfName" "../$sPlistName" ../bin/uninstall.sh ../bin/runTimeMachineBackup.sh install.sh;
+
+exit 0;
+
